@@ -1,0 +1,292 @@
+---
+title: 'Working with data: Introducing and comparing data.table and dplyr'
+author: "Ellen Webborn and Jonno Bourne"
+date: "29th October 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE, eval = TRUE}
+knitr::opts_chunk$set(echo = TRUE, eval = FALSE)
+library(data.table)
+library(tidyverse)
+```
+
+## Getting started 
+
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px;"}
+
+::: {}
+```{r, out.width = "120px", eval = TRUE, echo = FALSE}
+knitr::include_graphics("./images/datatablesticker.png")
+```
+:::
+
+
+::: {}
+
+### data.table package
+
+```{r, eval = FALSE, class.source="bg-success", class.output="bg-warning"}
+# data.table
+install.packages("data.table")
+library(data.table)
+```
+:::
+
+::::
+
+
+
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px;"}
+
+::: {}
+```{r, out.width = "120px", eval = TRUE, echo = FALSE}
+knitr::include_graphics("./images/dplyrsticker.png")
+```
+:::
+
+::: {}
+### dplyr package from the tidyverse
+```{r, eval = FALSE, class.source="bg-info", class.output="bg-danger"}
+install.packages("tidyverse")
+library(tidyverse)
+```
+:::
+::::
+
+
+
+## data.table basics
+
+- Data tables are a special kind of data frame (anything you can do with a data frame you can do with a data table)
+- The general ethos is for conscise coding (doesn't take up too much space in your code)
+
+
+### Define a data table (example):
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px;"}
+::: {}
+```{r, eval = TRUE, class.source="bg-success", class.output="bg-warning"}
+
+DT <- data.table(A = 1:5,
+                 B = c("Red", "Blue", "Red", "Blue", "Blue"),
+                 C = c(TRUE, TRUE, TRUE, TRUE, FALSE))
+```
+:::
+::: {}
+```{r, eval = TRUE, class.source="bg-success", class.output="bg-warning"}
+DT
+```
+:::
+::::
+
+
+
+### Basic data table notation
+```{r, out.width = "300px", eval = TRUE, echo = FALSE}
+knitr::include_graphics("./images/basicnotation.png")
+```
+
+#### Selecting an element in a table 
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px;"}
+::: {}
+```{r, eval = TRUE, class.source="bg-success", class.output="bg-warning"}
+DT[1, 2] # outputs a (single element) data table 
+DT[1, "B"] # equivalent - outputs a data table
+```
+:::
+::: {}
+```{r, eval = TRUE, class.source="bg-success", class.output="bg-warning"}
+DT[1, .(B)] # - outputs a data table
+DT[1, B] # - outputs a vector
+```
+:::
+::::
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px;"}
+::: {}
+#### Selecting multiple elements in a table   
+```{r, eval = TRUE, class.source="bg-success", class.output="bg-warning"}
+DT[1:3, c("B", "C")] 
+```
+:::
+::: {}
+```{r, eval = TRUE, class.source="bg-success", class.output="bg-warning"}
+DT[1:3, .(B, C)] 
+```
+:::
+::::
+
+
+
+### Basic changes to a data table:
+#### Add a column
+```{r, eval = TRUE, class.source="bg-success", class.output="bg-warning"}
+# Add a column
+DT[, D := rep(-1, 5)]
+DT
+```
+
+#### Change a value according to a rule
+```{r, eval = TRUE, class.source="bg-success", class.output="bg-warning"}
+DT[B == "Red", D := 99]
+DT
+```
+
+#### Rename columns
+```{r, eval = TRUE, class.source="bg-success", class.output="bg-warning"}
+setnames(DT, 
+         old = c("A", "C"), 
+         new = c("A1", "C1")) 
+# The 'old =' and 'new =' are optional but helpful
+DT
+
+```
+
+#### # Delete a column
+```{r, eval = TRUE, class.source="bg-success", class.output="bg-warning"}
+DT[, C1 := NULL]
+DT
+
+```
+
+
+### Common operators
+```{r, eval = TRUE, class.source="bg-success", class.output="bg-warning"}
+# sum a column
+DT[, sum(D)]
+DT[, .(sum(D), mean(D))]
+DT[, .(sumOfD = sum(D),
+       meanOfD = mean(D))]
+
+# Define a new column based on other columns
+DT[, E := D - A1]
+DT[A1 > 2, F := 0]
+DT
+
+# Get the number of rows (.N operator)
+DT[, .N] # number of rows in D
+DT[B == "Blue", .N] # number of rows with B = Blue
+
+```
+
+### Group by
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px;"}
+
+::: {}
+```{r, out.width = "200px", eval = TRUE, echo = FALSE}
+knitr::include_graphics("./images/groupby.png")
+```
+
+:::
+
+:::{}
+```{r, eval = TRUE, class.source="bg-success", class.output="bg-warning"}
+DT[, .N, by = B]
+```
+:::
+::::
+
+```{r, eval = TRUE, class.source="bg-success", class.output="bg-warning"}
+
+DT[, .N, by = .(B, F)]
+
+```
+
+### Key by
+```{r, eval = TRUE, class.source="bg-success", class.output="bg-warning"}
+
+DT[, .N, keyby = .(B, F)]
+
+```
+
+
+
+## Reading from and writing to csv files
+
+- data.table is very fast at writing and reading data
+- Functions **fwrite()** and **fread()** (creates a data table automatically)
+
+```{r, eval = FALSE, class.source="bg-success", class.output="bg-warning"}
+fread("my/file/path/data_name.csv")
+
+fwrite(DT, file = "my/file/path/data_name.csv")
+
+```
+
+## Combine multiple data tables with rbindlist
+
+```{r, eval = TRUE, class.source="bg-success", class.output="bg-warning"}
+
+DT2 <- rbindlist(list(DT, DT[1:3]))
+DT2
+```
+
+
+```{r, eval = FALSE, class.source="bg-success", class.output="bg-warning"}
+n <- 10^9
+fakeData <- data.table(a = 1:n,
+                       b = rnorm(n),
+                       d = rnorm(n)*n)
+
+t <- proc.time()
+fwrite(fakeData, 
+       file = "./fakeDataTable.RData")
+proc.time() - t # elapsed 8.20
+
+t <- proc.time()
+fread("./fakeDataTable.RData")
+proc.time() - t # elapsed 3.48
+
+```
+
+
+## Figures
+
+ggplot2 is part of the tidyverse and data.table is not - but this isn't a problem for integrating the two. Consider the following example which uses the penguins dataset
+
+```{r, eval = TRUE, class.source="bg-success", class.output="bg-warning"}
+
+# install.packages("remotes")
+# remotes::install_github("allisonhorst/palmerpenguins")
+
+library(palmerpenguins)
+penguins_dt <- as.data.table(penguins)
+
+peng_plot1 <- ggplot(penguins_dt[!is.na(year), 
+                                 .N, 
+                                 keyby = .(island, year)],
+                     aes(x = island,
+                         y = N,
+                         fill = as.factor(year))) + 
+  geom_bar(stat = "identity", 
+           position = position_dodge()) +
+  labs(x = "Island",
+       y = "Number of penguins by sex", 
+       fill = "Year") 
+
+
+penguins_dt[!is.na(year), 
+                                 .N, 
+                                 keyby = .(island, year)]
+```
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE, eval = TRUE}
+peng_plot1
+```
+
+
+
+
+
+# Data.table resources
+
+- [data.table wiki](https://github.com/Rdatatable/data.table/wiki/Getting-started)
+
+- [(]Steph Locke table wrangling](http://stephlocke.info/Rtraining/tablewrangling.html)
+
+- 
+
