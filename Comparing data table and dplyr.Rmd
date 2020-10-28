@@ -309,6 +309,237 @@ for(i in cols_for_analysis) {
 ```
 
 
+
+## tibble basics
+
+- Tibbles are a special kind of data frame (anything you can do with a data frame you can do with a data table)
+- The general ethos is for code that is easy to understand
+
+
+### Define a data table (example):
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px;"}
+::: {}
+```{r, eval = TRUE, class.source="bg-info", class.output="bg-danger"}
+
+df <- tibble(A = 1:5,
+                 B = c("Red", "Blue", "Red", "Blue", "Blue"),
+                 C = c(TRUE, TRUE, TRUE, TRUE, FALSE))
+```
+:::
+::: {}
+```{r, eval = TRUE, class.source="bg-info", class.output="bg-danger"}
+df
+```
+:::
+::::
+
+
+#### Selecting an element in a table 
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px;"}
+::: {}
+```{r, eval = TRUE, class.source="bg-info", class.output="bg-danger"}
+df[1, 2] # outputs a (single element) a tibble
+df[1, "B"] # equivalent - outputs a data table
+```
+:::
+
+::: {}
+```{r, eval = TRUE, class.source="bg-info", class.output="bg-danger"}
+df[1, ] %>% select(B) # - outputs a data table
+df[1, "B"] %>% pull # - outputs a vector
+```
+:::
+::::
+
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px;"}
+::: {}
+#### Selecting multiple elements in a table   
+```{r, eval = TRUE, class.source="bg-info", class.output="bg-danger"}
+df[1:3, c("B", "C")]
+```
+:::
+::: {}
+```{r, eval = TRUE, class.source="bg-info", class.output="bg-danger"}
+df %>% select(B, C) %>% slice(1:3)
+```
+:::
+::::
+
+
+
+### Basic changes to a data table:
+#### Add a column
+```{r, eval = TRUE, class.source="bg-info", class.output="bg-danger"}
+# Add a column
+df <- df %>% mutate(D = rep(-1, 5))
+df
+```
+
+#### Change a value according to a rule
+
+```{r, eval = TRUE, class.source="bg-info", class.output="bg-danger"}
+df <- df %>% mutate(D = ifelse(B=="Red", 99, D ))
+df
+```
+
+#### Rename columns
+```{r, eval = TRUE, class.source="bg-info", class.output="bg-danger"}
+df <- df %>% rename(A1 = A,
+                    C1 = C)
+df
+
+```
+
+#### Delete a column
+```{r, eval = TRUE, class.source="bg-info", class.output="bg-danger"}
+df %>% select(-C1)
+
+```
+
+
+### Common operators
+```{r, eval = TRUE, class.source="bg-info", class.output="bg-danger"}
+# sum a column
+sum(df$D)
+df %>% summarise(sum = sum(D),
+                 mean = mean(D))
+
+df %>% 
+  summarise(across(.cols = D, .fns = c(sum, mean)))
+
+# Define a new column based on other columns
+df <- df %>% mutate(E = D-A1,
+                    F = ifelse(A1>2, 0, F))
+
+df
+
+# Get the number of rows
+nrow(df)
+df %>% summarise(B = sum(B=="Blue")) # number of rows with B = Blue
+
+```
+
+### Group by
+:::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px;"}
+
+::: {}
+```{r, out.width = "200px", eval = TRUE, echo = FALSE}
+knitr::include_graphics("./images/groupby.png")
+```
+
+:::
+
+:::{}
+```{r, eval = TRUE, class.source="bg-info", class.output="bg-danger"}
+df %>% group_by(B) %>% summarise(counts = n())
+```
+:::
+::::
+
+```{r, eval = TRUE, class.source="bg-info", class.output="bg-danger"}
+
+df %>% group_by(B, F) %>% summarise(counts = n())
+
+
+```
+
+### Key by
+The dplyr equivalent is just to arrange the rows
+```{r, eval = TRUE, class.source="bg-info", class.output="bg-danger"}
+
+df <- df %>% arrange(B, F)
+
+```
+
+
+
+## Reading from and writing to csv files
+
+- data.table is very fast at writing and reading data
+- Functions **fwrite()** and **fread()** (creates a data table automatically)
+
+```{r, eval = FALSE, class.source="bg-info", class.output="bg-danger"}
+
+read.csv("my/file/path/data_name.csv")
+write.csv("my/file/path/data_name.csv")
+
+library(readr)
+#readr version is much faster than base
+read_csv("my/file/path/data_name.csv") 
+write_csv("my/file/path/data_name.csv")
+
+```
+
+## Combine multiple data tables with rbindlist
+
+```{r, eval = TRUE, class.source="bg-info", class.output="bg-danger"}
+
+
+df2 <- list(df, df[1:3,]) %>% bind_rows()
+
+#To load multiple files into a single data frame use map_df from the purrr package (another core tidyverse package)
+# df1 <- c("DT.csv", "DT.csv") %>%
+#   map_df(read_csv)
+
+```
+
+
+
+## Figures
+
+
+```{r, eval = TRUE, class.source="bg-info", class.output="bg-danger"}
+
+# install.packages("remotes")
+# remotes::install_github("allisonhorst/palmerpenguins")
+
+library(palmerpenguins)
+
+peng_plot2 <- penguins %>%
+  group_by(island, year) %>%
+  summarise(N = n()) %>%
+  ggplot(aes(x = island, y = N, fill = factor(year))) +
+  geom_col(position = "dodge") +
+  labs(x = "Island",
+       y = "Number of penguins by sex", 
+       fill = "Year") 
+```
+
+
+```{r, echo = FALSE, message = FALSE, warning = FALSE, eval = TRUE}
+peng_plot2
+```
+
+
+## Column names as variables
+The **get** and **eval** functions can be used to treat column names as variables. Consder the following example. We want to replace high outliers in each numeric column with NA (this isn't a scientifically robust plan but it's helpful to illustrate here).
+
+```{r, eval = TRUE, class.source="bg-info", class.output="bg-danger"}
+
+penguins_dt <- as.data.table(penguins)
+
+cols_for_analysis <- c("bill_length_mm", 
+                       "bill_depth_mm", 
+                       "flipper_length_mm",
+                       "body_mass_g")
+
+#I suggest this as the piece of code as it is easier to read, but it is your choice, my bit of code can be changed to match
+for(i in cols_for_analysis) {
+  penguins_dt[get(i) > mean(get(i), na.rm = TRUE), eval(i) := NA]
+}
+
+#The `all_of` function makes it explicit when you are using data from outside the data frame. This prevents issues occuring when a column in the data frame has the same name as a vector somewhere else in the workspace
+test2 <- penguins %>%
+  mutate(across(.cols = all_of(cols_for_analysis), 
+                .fns = ~ifelse(.x > mean(.x, na.rm = TRUE), NA, .x)
+                )
+         )
+
+```
+
+
+
 # Resources
 
 - [data.table wiki](https://github.com/Rdatatable/data.table/wiki/Getting-started)
