@@ -326,7 +326,7 @@ DT[, .N, by = .(B, F)]
 :::
 
 :::{}
-```{r, eval = TRUE, class.source="bg-info", class.output="bg-warning"}
+```{r, eval = TRUE, message=FALSE, class.source="bg-info", class.output="bg-warning"}
 df %>% group_by(B, F) %>% summarise(counts = n())
 ```
 :::
@@ -638,7 +638,7 @@ p1 <- ggplot(penguins_dt[!is.na(year),
 ```
 :::
 ::: {}
-```{r, eval = TRUE, class.source="bg-info", class.output="bg-warning"}
+```{r, eval = TRUE, message=FALSE, class.source="bg-info", class.output="bg-warning"}
 p2 <- penguins %>%
   group_by(island, year) %>%
   summarise(N = n()) %>%
