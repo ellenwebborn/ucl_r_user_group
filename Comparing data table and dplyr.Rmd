@@ -1,7 +1,7 @@
 ---
 title: 'Working with data: Introducing and comparing data.table and dplyr'
 author: "Ellen Webborn and Jonno Bourne"
-date: "29th October 2020"
+date: "bseeR user group, 29th October 2020"
 output: html_document
 ---
 
@@ -12,8 +12,19 @@ library(tidyverse)
 
 user <- "EW"
 if(user == "EW") {
-  dir <- "C:/Users/Ellen Webborn/OneDrive - University College London/Documents/R/bseeR user group/dataTableDplyrTalk"
+  directory <- "C:/Users/Ellen Webborn/OneDrive - University College London/Documents/R/bseeR user group/dataTableDplyrTalk"
 }
+```
+
+
+```{r notes, include=FALSE, eval = FALSE}
+# Notes to the reader: 
+
+# The 'across' function is quite new and you may need to update your tidyverse package to run this code (I ended up needing to update my version of R)
+
+# The many colons, e.g. ::: {}, :::, ::::, :::: {style="display: grid; grid-template-columns: 1fr 1fr; grid-column-gap: 10px;"} are there to split the code into 2 columns
+
+# The "class.output" creates the coloured backgrounds for the boxes in the html document
 ```
 
 # Getting started 
@@ -113,8 +124,8 @@ DT[1, B] # - outputs a vector
 ::: {}
 ```{r, eval = TRUE, class.source="bg-info", class.output="bg-warning"}
 df[1, 2] # outputs a tibble
-df[1, "B"] # equivalent - outputs 
-df[1, ] %>% select(B) # - outputs
+df[1, "B"] # equivalent - outputs a tibble
+df[1, ] %>% select(B) # - outputs a tibble
 df[1, "B"] %>% pull # - outputs a vector
 ```
 :::
@@ -438,12 +449,12 @@ proc.time() - t # elapsed: 9 s
 # Write to an RData file
 t <- proc.time()
 fwrite(fakeData, 
-       paste(dir, "/fakeDataTable.csv", sep = ""))
+       paste(directory, "/fakeDataTable.csv", sep = ""))
 proc.time() - t # elapsed: 16 s
 
 # Read from an RData file
 t <- proc.time()
-fread(paste(dir, "/fakeDataTable.csv", sep = ""))
+fread(paste(directory, "/fakeDataTable.csv", sep = ""))
 proc.time() - t # elapsed 39 s
 
 ```
@@ -467,12 +478,12 @@ proc.time() - t # elapsed: 9 s
 # Write to an RData file
 t <- proc.time()
 write_csv(fakeData2, 
-       file = paste(dir, "/fakeTibble.csv", sep = ""))
+       file = paste(directory, "/fakeTibble.csv", sep = ""))
 proc.time() - t # elapsed: 75 s
 
 # Read from an RData file
 t <- proc.time()
-read_csv(paste(dir, "/fakeTibble.csv", sep = ""))
+read_csv(paste(directory, "/fakeTibble.csv", sep = ""))
 proc.time() - t # elapsed: 66 s
 
 ```
